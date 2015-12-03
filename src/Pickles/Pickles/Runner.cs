@@ -45,7 +45,7 @@ namespace PicklesDoc.Pickles
             }
 
             var featureCrawler = container.Resolve<DirectoryTreeCrawler>();
-            GeneralTree<INode> features = featureCrawler.Crawl(configuration.FeatureFolder);
+            GeneralTree<INode> features = featureCrawler.Crawl(configuration.FeatureFolder, configuration.ExcludeTags ?? new string[] {});
 
             if (features == null)
             {

@@ -46,15 +46,15 @@ namespace PicklesDoc.Pickles.DirectoryCrawler
 
         public GeneralTree<INode> Crawl(string directory)
         {
-            return this.Crawl(this.fileSystem.DirectoryInfo.FromDirectoryName(directory), null);
+            return this.Crawl(this.fileSystem.DirectoryInfo.FromDirectoryName(directory), null, new string[] {});
         }
 
-        public GeneralTree<INode> Crawl(DirectoryInfoBase directory)
+        public GeneralTree<INode> Crawl(DirectoryInfoBase directory, string[] excludeTags)
         {
-            return this.Crawl(directory, null);
+            return this.Crawl(directory, null, excludeTags);
         }
 
-        private GeneralTree<INode> Crawl(DirectoryInfoBase directory, INode rootNode)
+        private GeneralTree<INode> Crawl(DirectoryInfoBase directory, INode rootNode, string[] excludeTags)
         {
             INode currentNode =
                 this.featureNodeFactory.Create(rootNode != null ? rootNode.OriginalLocation : null, directory);
@@ -66,9 +66,9 @@ namespace PicklesDoc.Pickles.DirectoryCrawler
 
             var tree = new GeneralTree<INode>(currentNode);
 
-            var filesAreFound = this.CollectFiles(directory, rootNode, tree);
+            var filesAreFound = this.CollectFiles(directory, rootNode, tree, excludeTags);
 
-            var directoriesAreFound = this.CollectDirectories(directory, rootNode, tree);
+            var directoriesAreFound = this.CollectDirectories(directory, rootNode, tree, excludeTags);
 
             if (!filesAreFound && !directoriesAreFound)
             {
@@ -78,13 +78,13 @@ namespace PicklesDoc.Pickles.DirectoryCrawler
             return tree;
         }
 
-        private bool CollectDirectories(DirectoryInfoBase directory, INode rootNode, GeneralTree<INode> tree)
+        private bool CollectDirectories(DirectoryInfoBase directory, INode rootNode, GeneralTree<INode> tree, string[] excludeTags)
         {
             List<GeneralTree<INode>> collectedNodes = new List<GeneralTree<INode>>();
 
             foreach (DirectoryInfoBase subDirectory in directory.GetDirectories().OrderBy(di => di.Name))
             {
-                GeneralTree<INode> subTree = this.Crawl(subDirectory, rootNode);
+                GeneralTree<INode> subTree = this.Crawl(subDirectory, rootNode, excludeTags);
                 if (subTree != null)
                 {
                     collectedNodes.Add(subTree);
@@ -99,7 +99,7 @@ namespace PicklesDoc.Pickles.DirectoryCrawler
             return collectedNodes.Count > 0;
         }
 
-        private bool CollectFiles(DirectoryInfoBase directory, INode rootNode, GeneralTree<INode> tree)
+        private bool CollectFiles(DirectoryInfoBase directory, INode rootNode, GeneralTree<INode> tree, string[] excludeTags)
         {
             List<INode> collectedNodes = new List<INode>();
 
@@ -109,6 +109,10 @@ namespace PicklesDoc.Pickles.DirectoryCrawler
                 try
                 {
                     node = this.featureNodeFactory.Create(rootNode.OriginalLocation, file);
+                    if (node is FeatureNode)
+                    {
+                        PruneByExcludedTags(excludeTags, ref node);
+                    }
                 }
                 catch (Exception)
                 {
@@ -134,6 +138,25 @@ namespace PicklesDoc.Pickles.DirectoryCrawler
             }
 
             return collectedNodes.Count > 0;
+        }
+
+        private static void PruneByExcludedTags(string[] excludeTags, ref INode node)
+        {
+            var feature = (FeatureNode) node;
+            if (feature.Feature.Tags.Intersect(excludeTags).Any())
+            {
+                node = null;
+            }
+            else
+            {
+                foreach (var scenario in feature.Feature.FeatureElements.ToList())
+                {
+                    if (scenario.Tags.Intersect(excludeTags).Any())
+                    {
+                        feature.Feature.FeatureElements.Remove(scenario);
+                    }
+                }
+            }
         }
 
         private static IEnumerable<INode> OrderFileNodes(List<INode> collectedNodes)

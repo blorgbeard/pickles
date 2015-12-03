@@ -48,6 +48,8 @@ namespace PicklesDoc.Pickles
 
         public TestResultsFormat TestResultsFormat { get; set; }
 
+        public string[] ExcludeTags { get; set; }
+
         public bool HasTestResults
         {
             get { return this.TestResultsFiles != null && this.testResultsFiles.Count > 0; }

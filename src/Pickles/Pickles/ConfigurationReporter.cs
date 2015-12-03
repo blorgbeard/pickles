@@ -35,6 +35,11 @@ namespace PicklesDoc.Pickles
             writeToLog($"Language                  : {configuration.Language}");
             writeToLog($"Incorporate Test Results? : {(configuration.HasTestResults ? "Yes" : "No")}");
 
+            if (configuration.ExcludeTags != null)
+            {
+                writeToLog($"Exclude tags              : {string.Join(", ", configuration.ExcludeTags)}");
+            }
+
             if (configuration.HasTestResults)
             {
                 writeToLog($"Test Result Format        : {configuration.TestResultsFormat}");

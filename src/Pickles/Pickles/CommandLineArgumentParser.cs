@@ -19,6 +19,7 @@
 //  --------------------------------------------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reflection;
@@ -54,6 +55,7 @@ namespace PicklesDoc.Pickles
         private string testResultsFile;
         private string testResultsFormat;
         private bool versionRequested;
+        private string[] excludeTags;
 
         public CommandLineArgumentParser(IFileSystem fileSystem)
         {
@@ -69,7 +71,8 @@ namespace PicklesDoc.Pickles
                 { "l|language=", HelpLanguageFeatureFiles, v => this.language = v },
                 { "df|documentation-format=", HelpDocumentationFormat, v => this.documentationFormat = v },
                 { "v|version", v => this.versionRequested = v != null },
-                { "h|?|help", v => this.helpRequested = v != null }
+                { "h|?|help", v => this.helpRequested = v != null },
+                { "et|exclude-tags=", "a comma-separated list of tags whose tagged features will be excluded from the output", v => this.excludeTags = v.Split(',')}
             };
         }
 
@@ -135,6 +138,11 @@ namespace PicklesDoc.Pickles
             {
                 configuration.DocumentationFormat =
                     (DocumentationFormat)Enum.Parse(typeof(DocumentationFormat), this.documentationFormat, true);
+            }
+
+            if (this.excludeTags != null)
+            {
+                configuration.ExcludeTags = this.excludeTags;
             }
 
             return true;
