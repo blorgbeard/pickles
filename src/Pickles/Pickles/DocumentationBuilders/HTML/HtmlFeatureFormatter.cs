@@ -72,7 +72,7 @@ namespace PicklesDoc.Pickles.DocumentationBuilders.HTML
 
             if (feature.Background != null)
             {
-                scenarios.Add(this.htmlScenarioFormatter.Format(feature.Background, id++));
+                scenarios.Add(this.htmlScenarioFormatter.FormatBackground(feature.Background, id++));
             }
 
             foreach (IFeatureElement featureElement in feature.FeatureElements)

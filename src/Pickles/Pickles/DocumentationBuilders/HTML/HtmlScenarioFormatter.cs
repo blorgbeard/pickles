@@ -47,19 +47,8 @@ namespace PicklesDoc.Pickles.DocumentationBuilders.HTML
 
         public XElement Format(Scenario scenario, int id)
         {
-            var header = new XElement(
-                this.xmlns + "div",
-                new XAttribute("class", "scenario-heading"),
-                new XElement(this.xmlns + "h2", scenario.Name));
-
-            var tags = RetrieveTags(scenario);
-            if (tags.Length > 0)
-            {
-                var paragraph = new XElement(this.xmlns + "p", CreateTagElements(tags.OrderBy(t => t).ToArray(), this.xmlns));
-                paragraph.Add(new XAttribute("class", "tags"));
-                header.Add(paragraph);
-            }
-
+            var header = this.MakeHeader(scenario.Name);
+            this.AddTags(scenario, header);
             header.Add(this.htmlDescriptionFormatter.Format(scenario.Description));
 
             return new XElement(
@@ -67,12 +56,49 @@ namespace PicklesDoc.Pickles.DocumentationBuilders.HTML
                 new XAttribute("class", "scenario"),
                 this.htmlImageResultFormatter.Format(scenario),
                 header,
+                this.GetStepsDiv(scenario));
+        }
+      
+        private XElement MakeHeader(string name)
+        {
+            var header = new XElement(
+                this.xmlns + "div",
+                new XAttribute("class", "scenario-heading"),
+                new XElement(this.xmlns + "h2", name));
+            return header;
+        }
+
+        private void AddTags(Scenario scenario, XElement header)
+        {
+            var tags = RetrieveTags(scenario);
+            if (tags.Length > 0)
+            {
+                var paragraph = new XElement(this.xmlns + "p", CreateTagElements(tags.OrderBy(t => t).ToArray(), this.xmlns));
+                paragraph.Add(new XAttribute("class", "tags"));
+                header.Add(paragraph);
+            }
+        }
+
+        private XElement GetStepsDiv(Scenario scenario)
+        {
+            return new XElement(
+                this.xmlns + "div",
+                new XAttribute("class", "steps"),
                 new XElement(
-                    this.xmlns + "div",
-                    new XAttribute("class", "steps"),
-                    new XElement(
-                        this.xmlns + "ul",
-                        scenario.Steps.Select(step => this.htmlStepFormatter.Format(step)))));
+                    this.xmlns + "ul",
+                    scenario.Steps.Select(step => this.htmlStepFormatter.Format(step))));
+        }
+
+        public XElement FormatBackground(Scenario scenario, int id)
+        {
+            var header = this.MakeHeader("Background:");
+            this.AddTags(scenario, header);
+
+            return new XElement(
+                this.xmlns + "li",
+                new XAttribute("class", "scenario"),
+                header,
+                this.GetStepsDiv(scenario));
         }
 
         internal static XNode[] CreateTagElements(string[] tags, XNamespace xNamespace)
